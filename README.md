@@ -1,6 +1,7 @@
-# Gitcoin: 7) Port An Existing Ethereum DApp To Polyjuice
+# Gitcoin: 8) Modify The Ported DApp So It Supports Ethereum Assets Via Force Bridge
 
-1. Screenshots or video of your application running on Godwoken.
+**https://github.com/duylinh196tb/Nervos-GC/tree/master/task8**
+<!-- 1. Screenshots or video of your application running on Godwoken.
 
 ![alt text](proof.png)
 
@@ -377,4 +378,4 @@ Deploy transaction hash: `0x3ecd63d73fb6be479a2f8e27456b3abc08900a8f3f19a92d2cf5
       "type": "function"
     }
   ]
-```
+``` -->
