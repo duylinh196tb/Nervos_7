@@ -11,6 +11,7 @@ import { AddressTranslator } from 'nervos-godwoken-integration';
 
 import { DlinhNFTWrapper } from '../lib/contracts/DlinhNFTWrapper';
 import { CONFIG } from '../config';
+import { sudt_ABI, sudt_address } from '../lib/contracts/constants';
 
 async function createWeb3() {
     // Modern dapp browsers...
@@ -48,9 +49,11 @@ export function App() {
     const [storedValue, setStoredValue] = useState<number | undefined>();
     const [deployTxHash, setDeployTxHash] = useState<string | undefined>();
     const [polyjuiceAddress, setPolyjuiceAddress] = useState<string | undefined>();
+    const [depositAddress, setDepositAddress] = useState<string | undefined>();
     const [transactionInProgress, setTransactionInProgress] = useState(false);
     const [imgUrl, setImgUrl] = useState('');
     const [listNFT, setListNFT] = useState([]);
+    const [ckEth, setCkEth] = useState<bigint>();
 
     const toastId = React.useRef(null);
     const [newStoredNumberInputValue, setNewStoredNumberInputValue] = useState<
@@ -65,6 +68,26 @@ export function App() {
             setPolyjuiceAddress(undefined);
         }
     }, [accounts?.[0]]);
+    useEffect(() => {
+        if (accounts?.[0]) {
+            const addressTranslator = new AddressTranslator();
+            addressTranslator.getLayer2DepositAddress(web3, accounts?.[0]).then(_dps => {
+                setDepositAddress(_dps.addressString);
+            });
+        } else {
+            setDepositAddress(undefined);
+        }
+    }, [accounts?.[0]]);
+
+    useEffect(() => {
+        if (polyjuiceAddress) {
+            let sudtProxyContract = new web3.eth.Contract(sudt_ABI, sudt_address);
+            sudtProxyContract.methods
+                .balanceOf(polyjuiceAddress)
+                .call()
+                .then(_ckEth => setCkEth(BigInt(Number(_ckEth))));
+        }
+    }, [polyjuiceAddress]);
 
     useEffect(() => {
         if (transactionInProgress && !toastId.current) {
@@ -180,9 +203,22 @@ export function App() {
             <br />
             Your Polyjuice address: <b>{polyjuiceAddress || ' - '}</b>
             <br />
+            Your Layer 2 deposit address:{' '}
+            <b style={{ wordWrap: 'break-word' }}>{depositAddress || ' - '}</b>
+            <div>
+                Deposit to L2 at:{' '}
+                <a href="https://force-bridge-test.ckbapp.dev/bridge/Ethereum/Nervos?xchain-asset=0x0000000000000000000000000000000000000000">
+                    Force Bridge
+                </a>
+            </div>
+            <br />
+            SUDT-ERC20 PROXY contract address:{' '}
+            <b style={{ wordWrap: 'break-word' }}>{"0x8A02fBB16214a0207704B30DE8bfd66c32060ad7" || ' - '}</b>
             <br />
             Nervos Layer 2 balance:{' '}
-            <b>{l2Balance ? (l2Balance / 10n ** 8n).toString() : <LoadingIndicator />} CKB</b>
+            <b>{l2Balance ? (l2Balance / 10n ** 8n).toString() : <LoadingIndicator />} CKB</b>{' '}
+            {'&& '}
+            <b>{ckEth ? (ckEth / 10n ** 18n).toString() : <LoadingIndicator />} SUDT</b>
             <br />
             <br />
             Deployed contract address: <b>{contract?.address || '-'}</b> <br />
